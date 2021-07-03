@@ -103,3 +103,9 @@ You can follow along with Hashicorp's getting started with Vault tutorial [here]
 - Service Discovery can be added to ECS service (would require rebuild of the service if already deployed)
 - Running more than one vault task can cause long load times since vault will continually redirect to the ALB until it lands on the single primary Vault instance. More information can be found in [Hashicorp's documentation](https://www.vaultproject.io/docs/concepts/ha) under the load balancer section.
 - The UI can be disabled by modifying the ECS task variable `VAULT_LOCAL_CONFIG` to `ui = false ....`. The target group health checks would also need to be updated if this is disabled, as the default healthcheck is `/ui/vault/auth?with=token` which only exists with enabled UI.
+
+
+# To Do
+- Change health check to `/v1/sys/health` - make sure this works when vault is not initialized.
+- Somehow only register traffic to active node.
+
