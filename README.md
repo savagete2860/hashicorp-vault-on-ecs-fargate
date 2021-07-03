@@ -1,9 +1,11 @@
 # About
 
-This project will contain everything needed to run an HA vault cluster backed by DynamoDB and exposed on an Application Load Balancer. 
+This project creates a highly available Vault cluster backed by DynamoDB and exposed on an Application Load Balancer. 
 The ALB will listen over HTTPS on port 443 and HTTP on port 80 which redirects to the HTTPS listener. By default, the security group on the ALB will have no ingress rules and they must be added after deployment to connect.
 
 # Architecture Diagram
+
+> Note: You must already have a VPC deployed with at least two public and two private subnets.
 
 ![vault](./media/vault-arch-diagram.png)
 
@@ -40,6 +42,24 @@ Make a new ACM certificate. This certificate must be validated before deploying 
 
 Run the cloudformation [here](./cloudformation/vault.json)
 
+| *Resources Created by the CloudFormation* |
+|:--------:|
+| KMS Key |
+| KMS Key Alias |
+| DynamoDB Table |
+| ECS Cluster |
+| ECS Service |
+| ECS Task Definition |
+| Internet Facing Application Load Balancer |
+| HTTP ALB Listener |
+| HTTPS ALB Listener |
+| Target Group |
+| ALB Security Group |
+| ECS Service Security Group |
+| ECS Execution IAM Role |
+| ECS Task Execution IAM Role |
+| CloudWatch Log Group |
+
 # Map DNS
 
 Map the created ALB DNS to your desired fully qualified domain name.
@@ -63,10 +83,23 @@ Make sure you save this information in Secrets manager or similar. These keys ca
 
 # Use Vault
 
-You can now use Vault
+To use Vault, you can connect via the UI, or via the CLI.
+
+[Install Vault](https://www.vaultproject.io/docs/install)
+
+To use the CLI, you must first tell vault where your server is and log in.
+
+```
+export VAULT_ADDR='https://your-dns'
+vault login
+```
+
+You can follow along with Hashicorp's getting started with Vault tutorial [here](https://learn.hashicorp.com/collections/vault/getting-started) at the `your first secret` step if desired.
 
 # Considerations
 - Retention period and KMS encryption could be added to the created ECS task's log group's cloudformation resource.
+- VPC endpoints can be leveraged to connect to DynamoDB and KMS. `AWS_KMS_ENDPOINT` and `AWS_DYNAMODB_ENDPOINT` are the variables vault needs to use them.
 - WAF can be attached to ALB.
 - Service Discovery can be added to ECS service (would require rebuild of the service if already deployed)
-- Running more than one vault task can cause long load times since vault will continually redirect to the ALB until it lands on the single primary Vault instance. More inormation can be found in [Hashicorp's documentation](https://www.vaultproject.io/docs/concepts/ha) under the load balancer section.
+- Running more than one vault task can cause long load times since vault will continually redirect to the ALB until it lands on the single primary Vault instance. More information can be found in [Hashicorp's documentation](https://www.vaultproject.io/docs/concepts/ha) under the load balancer section.
+- The UI can be disabled by modifying the ECS task variable `VAULT_LOCAL_CONFIG` to `ui = false ....`. The target group health checks would also need to be updated if this is disabled, as the default healthcheck is `/ui/vault/auth?with=token` which only exists with enabled UI.
