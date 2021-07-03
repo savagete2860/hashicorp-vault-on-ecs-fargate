@@ -9,18 +9,18 @@ The ALB will listen over HTTPS on port 443 and HTTP on port 80 which redirects t
 
 # High Level Deployment Steps
 - Create the certhelper container and store in ECR or similar.
-- Create and validate an AC certificate.
-- Deploy CloudFormation
+- Create and validate an ACM certificate.
+- Deploy CloudFormation.
 - Map ALB DNS to FQDN in Route53 or other DNS provider.
 - Add ingress rules on ALB security group.
-- Initialize Vault
+- Initialize Vault.
 
 # Cert Helper
 For this deployment to work, you must create a container that will generate self-signed certificates. Ideally, this container will reside in ECR.
 
 The cert helper is a container that will generate self-signed certificates specific to the running host each time a new vault task is created. The certhelper container and the vault container share a bind mount at /ssl which is where our deployment will look for the generated certificates. The vault container will not start until the cert helper container is in the COMPLETED status, indicating the certificates are created and available.
 
-To build this container, edit [createcert.sh](./certhelper-container/createcert.sh) and replace `DNS.1 = vault.timsavage.upmce.net` with `DNS.1 = YOUR-DNS-NAME`. Then perform standard docker build. Example ECR build and push below. Note the ECR repo `certhelper` already exists.
+To build this container, edit [createcert.sh's](./certhelper-container/createcert.sh) variables. Then perform standard docker build. Example ECR build and push below. Note the ECR repo `certhelper` already exists.
 
 ```bash
 aws --profile $PROFILENAME ecr get-login-password --region #REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
