@@ -153,6 +153,9 @@
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
         "TableName": { "Ref": "DynamoDBTableName" },
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true
+        },
         "AttributeDefinitions": [
           {
             "AttributeName" : "Path",
