@@ -10,8 +10,6 @@ COUNTRYCODE=US
 STATE=Pennsylvania
 LOCALITY=Pittsburgh
 ORGANIZATION=examplecompany
-COMMONNAME=yourvault.fqdn.com
-ADDITIONALDNSNAME=additional.vault.fqdn.com
 #######################################################
 
 # Pull the fargate task's IP.
@@ -27,7 +25,7 @@ prompt = no
 [req_distinguished_name]
 C = ${COUNTRYCODE}
 ST = ${STATE}
-L =  $(LOCALITY)
+L =  ${LOCALITY}
 O = ${ORGANIZATION}
 CN = ${VAULTDNS}
 
@@ -38,7 +36,6 @@ basicConstraints = CA:TRUE
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = ${ADDITIONALDNSNAME}
 IP.1 = ${CURRENTIP}
 DATA
 
@@ -46,7 +43,7 @@ DATA
 openssl req -x509 -batch -nodes -newkey rsa:2048 -keyout /ssl/server.key -out /ssl/server.crt -config /ssl/selfsigned.cfr -days 365
 
 # Add vault group permissions
-chmod 770 /ssl && chmod 444 /ssl/*
+chmod 770 /ssl && chmod 440 /ssl/*
 
 # List files at /ssl for troubleshooting
 ls -al /ssl

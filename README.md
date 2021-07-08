@@ -1,7 +1,7 @@
 # About
 
 This project creates a highly available Vault cluster backed by DynamoDB and exposed on an Application Load Balancer. 
-The ALB will listen over HTTPS on port 443 and HTTP on port 80 which redirects to the HTTPS listener. By default, the security group on the ALB will have no ingress rules and they must be added after deployment to connect.
+The ALB will listen over HTTPS on port 443 and HTTP on port 80 which redirects to the HTTPS listener. By default, the security group on the ALB will only have one inbound rule which is a nested security group for the ECS service. Any other inbound rules must be added after deployment to connect.
 
 # Architecture Diagram
 
@@ -96,16 +96,12 @@ vault login
 
 You can follow along with Hashicorp's getting started with Vault tutorial [here](https://learn.hashicorp.com/collections/vault/getting-started) at the `your first secret` step if desired.
 
+# Limitations
+- ECS Fargate does not support ipc_lock capability which is recommended by Hashicorp to block process memory from being swapped to disk.
+- Running more than one vault task can cause long load times since vault will continually redirect to the ALB until it lands on the single primary Vault instance. More information can be found in [Hashicorp's documentation](https://www.vaultproject.io/docs/concepts/ha) under the load balancer section.
+
 # Considerations
-- Retention period and KMS encryption could be added to the created ECS task's log group's cloudformation resource.
 - VPC endpoints can be leveraged to connect to DynamoDB and KMS. `AWS_KMS_ENDPOINT` and `AWS_DYNAMODB_ENDPOINT` are the variables vault needs to use them.
 - WAF can be attached to ALB.
 - Service Discovery can be added to ECS service (would require rebuild of the service if already deployed)
-- Running more than one vault task can cause long load times since vault will continually redirect to the ALB until it lands on the single primary Vault instance. More information can be found in [Hashicorp's documentation](https://www.vaultproject.io/docs/concepts/ha) under the load balancer section.
-- The UI can be disabled by modifying the ECS task variable `VAULT_LOCAL_CONFIG` to `ui = false ....`. The target group health checks would also need to be updated if this is disabled, as the default healthcheck is `/ui/vault/auth?with=token` which only exists with enabled UI.
-
-
-# To Do
-- Change health check to `/v1/sys/health` - make sure this works when vault is not initialized.
-- Somehow only register traffic to active node.
-
+- The UI can be disabled by modifying the ECS task variable `VAULT_LOCAL_CONFIG` to `ui = false ....`. The target group health checks would also need to be updated if this is disabled, as the default healthcheck is `/ui/vault/auth?with=token` which only exists with enabled UI. This can be changed to `/v1/sys/health` but this health check path will only work once the cluster is initialized.

@@ -38,7 +38,8 @@
             "default": "Miscellaneous Parameters"
           },
           "Parameters": [
-            "CertificateARN"
+            "CertificateARN",
+            "VaultLogRetention"
           ]
         },
         {
@@ -76,6 +77,11 @@
     "Owner": {
       "Type": "String",
       "Description": "Owner's email address used for tagging resources."
+    },
+    "VaultLogRetention": {
+      "Type": "String",
+      "Description": "Log retention period in days for ECS logs.",
+      "Default": "1"
     },
     "ClusterName": {
       "Type": "String",
@@ -240,6 +246,20 @@
                 }
               },
               "Action": "kms:*",
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": { "Fn::Sub": "logs.${AWS::Region}.amazonaws.com" }
+              },
+              "Action": [
+                "kms:Encrypt*",
+                "kms:Decrypt*",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:Describe*"
+              ],
               "Resource": "*"
             }
           ]
@@ -606,10 +626,22 @@
         "SourceSecurityGroupId": { "Ref": "ECSSecurityGroup" }
       }
     },
+    "AllowServiceOnALB": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": { "Ref": "ALBSecurityGroup" },
+        "IpProtocol": "tcp",
+        "FromPort": "443",
+        "ToPort": "443",
+        "SourceSecurityGroupId": { "Ref": "ECSSecurityGroup" }
+      }
+    },
     "ECSLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "LogGroupName": { "Fn::Sub": "ecs/${Application}-${Environment}/vault" }
+        "LogGroupName": { "Fn::Sub": "ecs/${Application}-${Environment}/vault" },
+        "KmsKeyId": { "Fn::GetAtt": ["VaultKMSKey", "Arn"] },
+        "RetentionInDays": { "Ref": "VaultLogRetention" }
       }
     },
     "ECSTask": {

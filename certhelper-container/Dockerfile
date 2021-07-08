@@ -1,4 +1,4 @@
-FROM alpine
+FROM alpine:latest
 
 RUN apk update && apk add openssl curl jq
 RUN adduser -D vault vault -g 1000
