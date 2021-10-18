@@ -286,7 +286,7 @@ Resources:
           - "-"
           - - Ref: Application
             - Ref: Environment
-      Scheme: internet-facing
+      Scheme: internal
       SecurityGroups:
         - Ref: ALBSecurityGroup
       Subnets:
