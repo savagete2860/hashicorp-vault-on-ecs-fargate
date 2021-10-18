@@ -1,6 +1,6 @@
 # About
 
-This project creates a highly available Vault cluster backed by DynamoDB and exposed on an Application Load Balancer. 
+This project creates a highly available Vault cluster backed by DynamoDB and exposed on an Application Load Balancer.
 The ALB will listen over HTTPS on port 443 and HTTP on port 80 which redirects to the HTTPS listener. By default, the security group on the ALB will only have one inbound rule which is a nested security group for the ECS service. Any other inbound rules must be added after deployment to connect.
 
 # Architecture Diagram
@@ -10,6 +10,7 @@ The ALB will listen over HTTPS on port 443 and HTTP on port 80 which redirects t
 ![vault](./media/vault-arch-diagram.png)
 
 # High Level Deployment Steps
+
 - Create the certhelper container and store in ECR or similar.
 - Create and validate an ACM certificate.
 - Deploy CloudFormation.
@@ -18,6 +19,7 @@ The ALB will listen over HTTPS on port 443 and HTTP on port 80 which redirects t
 - Initialize Vault.
 
 # Cert Helper
+
 For this deployment to work, you must create a container that will generate self-signed certificates. Ideally, this container will reside in ECR.
 
 The cert helper is a container that will generate self-signed certificates specific to the running host each time a new vault task is created. The certhelper container and the vault container share a bind mount at /ssl which is where our deployment will look for the generated certificates. The vault container will not start until the cert helper container is in the COMPLETED status, indicating the certificates are created and available.
@@ -42,23 +44,23 @@ Make a new ACM certificate. This certificate must be validated before deploying 
 
 Run the cloudformation [here](./cloudformation/vault.json)
 
-| *Resources Created by the CloudFormation* |
-|:--------:|
-| KMS Key |
-| KMS Key Alias |
-| DynamoDB Table |
-| ECS Cluster |
-| ECS Service |
-| ECS Task Definition |
+| _Resources Created by the CloudFormation_ |
+| :---------------------------------------: |
+|                  KMS Key                  |
+|               KMS Key Alias               |
+|              DynamoDB Table               |
+|                ECS Cluster                |
+|                ECS Service                |
+|            ECS Task Definition            |
 | Internet Facing Application Load Balancer |
-| HTTP ALB Listener |
-| HTTPS ALB Listener |
-| Target Group |
-| ALB Security Group |
-| ECS Service Security Group |
-| ECS Execution IAM Role |
-| ECS Task Execution IAM Role |
-| CloudWatch Log Group |
+|             HTTP ALB Listener             |
+|            HTTPS ALB Listener             |
+|               Target Group                |
+|            ALB Security Group             |
+|        ECS Service Security Group         |
+|          ECS Execution IAM Role           |
+|        ECS Task Execution IAM Role        |
+|           CloudWatch Log Group            |
 
 # Map DNS
 
@@ -75,6 +77,7 @@ curl --request PUT -d '{"recovery_shares": 1, "recovery_threshold": 1}' https://
 ```
 
 This will output something like:
+
 ```
 {"keys":[],"keys_base64":[],"recovery_keys":["xxxxxxxxxxxxxxxxxxx"],"recovery_keys_base64":["xxxxxxxxxxxxxxxxxx"],"root_token":"xxxxxxxxxxxxxxxxxxxxx"}
 ```
@@ -97,10 +100,12 @@ vault login
 You can follow along with Hashicorp's getting started with Vault tutorial [here](https://learn.hashicorp.com/collections/vault/getting-started) at the `your first secret` step if desired.
 
 # Limitations
+
 - ECS Fargate does not support ipc_lock capability which is recommended by Hashicorp to block process memory from being swapped to disk.
 - Running more than one vault task can cause long load times since vault will continually redirect to the ALB until it lands on the single primary Vault instance. More information can be found in [Hashicorp's documentation](https://www.vaultproject.io/docs/concepts/ha) under the load balancer section.
 
 # Considerations
+
 - VPC endpoints can be leveraged to connect to DynamoDB and KMS. `AWS_KMS_ENDPOINT` and `AWS_DYNAMODB_ENDPOINT` are the variables vault needs to use them.
 - WAF can be attached to ALB.
 - Service Discovery can be added to ECS service (would require rebuild of the service if already deployed)
