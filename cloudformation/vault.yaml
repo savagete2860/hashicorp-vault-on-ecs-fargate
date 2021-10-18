@@ -24,6 +24,7 @@ Metadata:
           default: Miscellaneous Parameters
         Parameters:
           - CertificateDNSValidationHostedZone
+          - ALBAliasHostedZoneId
           - VaultLogRetention
       - Label:
           default: ECS Parameters
@@ -106,6 +107,9 @@ Parameters:
   CertificateDNSValidationHostedZone:
     Type: String
     Description: The Route53 hosted zone to use when using DNS validation on the ACM Certificate.
+  ALBAliasHostedZoneId:
+    Type: String
+    Description: The Route53 hosted zone to use when creating an alias for the ALB
 Resources:
   DynamodbTable:
     Type: "AWS::DynamoDB::Table"
@@ -278,6 +282,30 @@ Resources:
         - Key: Cluster
           Value:
             Ref: ClusterName
+  VaultCultureampIoRecord:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      Name:
+        "Fn::Sub": "${VaultDNS}."
+      Type: A
+      AliasTarget:
+        DNSName:
+          "Fn::Join":
+            - ""
+            - - dualstack.
+              - "Fn::GetAtt":
+                  - ApplicationLoadBalancer
+                  - DNSName
+        HostedZoneId:
+          "Fn::GetAtt":
+            - ApplicationLoadBalancer
+            - CanonicalHostedZoneID
+      HostedZoneId: ALBAliasHostedZoneId
+      SetIdentifier:
+        "Fn::GetAtt":
+          - ApplicationLoadBalancer
+          - DNSName
+      Weight: 1
   ApplicationLoadBalancer:
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:

@@ -13,7 +13,6 @@ The ALB will listen over HTTPS on port 443 and HTTP on port 80 which redirects t
 
 - Create the certhelper container and store in ECR or similar.
 - Deploy CloudFormation.
-- Map ALB DNS to FQDN in Route53 or other DNS provider.
 - Add ingress rules on ALB security group.
 - Initialize Vault.
 
@@ -51,6 +50,7 @@ Run the cloudformation [here](./cloudformation/vault.json)
 |             HTTP ALB Listener             |
 |            HTTPS ALB Listener             |
 |              ACM Certificate              |
+|           ALB DNS Route53 Alias           |
 |               Target Group                |
 |            ALB Security Group             |
 |        ECS Service Security Group         |
