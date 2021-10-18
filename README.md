@@ -12,7 +12,6 @@ The ALB will listen over HTTPS on port 443 and HTTP on port 80 which redirects t
 # High Level Deployment Steps
 
 - Create the certhelper container and store in ECR or similar.
-- Create and validate an ACM certificate.
 - Deploy CloudFormation.
 - Map ALB DNS to FQDN in Route53 or other DNS provider.
 - Add ingress rules on ALB security group.
@@ -36,10 +35,6 @@ docker build . -t $AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/certhelper:lates
 docker push $AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/certhelper:latest
 ```
 
-# Create an ACM certificate for the ALB
-
-Make a new ACM certificate. This certificate must be validated before deploying the CloudFormation.
-
 # Deploy Vault
 
 Run the cloudformation [here](./cloudformation/vault.json)
@@ -55,6 +50,7 @@ Run the cloudformation [here](./cloudformation/vault.json)
 | Internet Facing Application Load Balancer |
 |             HTTP ALB Listener             |
 |            HTTPS ALB Listener             |
+|              ACM Certificate              |
 |               Target Group                |
 |            ALB Security Group             |
 |        ECS Service Security Group         |
